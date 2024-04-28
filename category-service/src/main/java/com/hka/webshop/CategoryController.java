@@ -52,6 +52,7 @@ public class CategoryController {
         if(!categoryRepository.existsById(id)) throw new RuntimeException();
         if(checkProductsExist(id)) return ResponseEntity.badRequest().body("Cannot delete category if products using this category exist");
 
+        categoryRepository.deleteById(id);
         return ResponseEntity.ok("");
     }
 
@@ -59,6 +60,7 @@ public class CategoryController {
         WebClient client = WebClient.create("http://" + productServiceEndpoint + ":8080/products/");
         try {
             var response = client.get().uri("?categoryId="+String.valueOf(categoryId)).accept(MediaType.APPLICATION_JSON).retrieve().bodyToMono(Product[].class).block();
+            assert response != null;
             return response.length >0;
         } catch (WebClientResponseException wcre) {
             return false;
