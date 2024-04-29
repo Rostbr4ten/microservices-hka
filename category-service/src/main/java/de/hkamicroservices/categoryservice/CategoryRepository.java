@@ -1,4 +1,4 @@
-package com.hka.webshop;
+package de.hkamicroservices.categoryservice;
 
 import org.springframework.data.repository.CrudRepository;
 

@@ -1,21 +1,17 @@
-package com.hka.webshop;
+package de.hkamicroservices.categoryservice;
 
 import javax.persistence.*;
 
-import java.util.UUID;
 
-import javax.persistence.Column;
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Table;
-
-import org.hibernate.annotations.GenericGenerator;
-
-// Category structure representation
+/**
+ * This class contains details about categories.
+ */
 @Entity
 public class Category implements java.io.Serializable {
 
+    /**
+     *
+     */
     private static final long serialVersionUID = 1L;
     private Long id;
     private String name;
@@ -49,3 +45,4 @@ public class Category implements java.io.Serializable {
 
 
 }
+

@@ -1,12 +1,18 @@
-package com.hka.webshop;
+package de.hkamicroservices.categoryservice;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
 import javax.servlet.http.HttpServletResponse;
+
+import java.util.Objects;
+
 
 @RestController()
 @RequestMapping(path="/categories")
@@ -41,12 +47,13 @@ public class CategoryController {
     }
 
     @DeleteMapping(path="/{id}")
-    public ResponseEntity<?> deleteCategory(@PathVariable Long id, HttpServletResponse response){
+    public void deleteCategory(@PathVariable Long id, HttpServletResponse response) {
         response.setHeader("Pod", System.getenv("HOSTNAME"));
-        if(!categoryRepository.existsById(id)) throw new RuntimeException();
-
+    
+        if (!categoryRepository.existsById(id)) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Category not found");
+        }
         categoryRepository.deleteById(id);
-        return ResponseEntity.ok("");
     }
 
 }

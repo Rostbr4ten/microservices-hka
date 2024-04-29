@@ -1,4 +1,4 @@
-package com.hka.webshop;
+package de.hkamicroservices.productservice;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
@@ -67,9 +67,6 @@ public class ProductController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<?> addProduct(@RequestBody Product product, HttpServletResponse response) {
         response.setHeader("Pod", System.getenv("HOSTNAME"));
-        if (product.getCategoryId() != 0 )
-            return ResponseEntity.badRequest().body("Category does not exist");
-
         var createdProduct = productRepository.save(product);
         var location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(createdProduct.getId()).toUri();
         return ResponseEntity.created(location).body(createdProduct);
