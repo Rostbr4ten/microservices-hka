@@ -2,6 +2,16 @@ package com.hka.webshop;
 
 import javax.persistence.*;
 
+import java.util.UUID;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+import org.hibernate.annotations.GenericGenerator;
+
 // Product structure representation
 @Entity
 public class Product {
