@@ -1,4 +1,4 @@
-package de.hkamicroservices.categoryservice;
+package com.hka.webshop;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -6,8 +6,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 @SpringBootTest
 class CategoryServiceApplicationTests {
 
-//    @Test
-//    void contextLoads() {
-//    }
+    // context loads crashes
+    //@Test
+    //void contextLoads() {
+    //}
 
 }

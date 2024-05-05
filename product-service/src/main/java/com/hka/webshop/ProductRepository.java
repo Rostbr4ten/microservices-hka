@@ -1,4 +1,4 @@
-package de.hkamicroservices.productservice;
+package com.hka.webshop;
 
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;

@@ -1,4 +1,4 @@
-package de.hkamicroservices.categoryservice;
+package com.hka.webshop;
 
 import javax.persistence.*;
 
