@@ -16,7 +16,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
-
+// Rest Controller
 @RestController()
 @RequestMapping(path = "/products")
 public class ProductController {

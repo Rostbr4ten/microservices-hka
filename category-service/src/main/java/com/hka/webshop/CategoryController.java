@@ -13,7 +13,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import java.util.Objects;
 
-
+// Rest Controller
 @RestController()
 @RequestMapping(path="/categories")
 public class CategoryController {

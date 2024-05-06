@@ -2,9 +2,7 @@ package com.hka.webshop;
 
 import javax.persistence.*;
 
-/**
- * This class contains details about products.
- */
+// Datenmodell
 @Entity
 public class Product {
 
