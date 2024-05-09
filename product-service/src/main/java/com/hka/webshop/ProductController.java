@@ -63,8 +63,6 @@ public class ProductController {
     public ResponseEntity<?> addProduct(@RequestBody Product product, HttpServletResponse response) {
         response.setHeader("Pod", System.getenv("HOSTNAME"));
 
-        System.out.println("Category " + product.getCategoryId() + "exists: " + (product.getCategoryId() != 0 && getCategory(product.getCategoryId()) == null));
-
         if (product.getCategoryId() != 0 && getCategory(product.getCategoryId()) == null)
             return ResponseEntity.badRequest().body("Product can't be created due to non existent category");
 
@@ -92,7 +90,6 @@ public class ProductController {
     }
 
     private WebClient createWebClient() {
-        System.out.println("URL called: " + "http://" + categoryServiceEndpoint + ":8080/categories/");
         return WebClient.create("http://" + categoryServiceEndpoint + ":8080/categories/");
     }
 }
