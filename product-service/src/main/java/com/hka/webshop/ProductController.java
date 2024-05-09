@@ -23,7 +23,7 @@ public class ProductController {
 
     @GetMapping(path = "/")
     public Iterable<Product> getAllProducts(@RequestParam(required = false) Boolean full,
-                                            @RequestParam(required = false) Integer categoryId,
+                                            @RequestParam(required = false) Integer categoryId, //hier request ob product mit category exisitiert
                                             @RequestParam(required = false) String search,
                                             @RequestParam(required = false, defaultValue = "0.0") Double minPrice,
                                             @RequestParam(required = false) Double maxPrice, HttpServletResponse response) {

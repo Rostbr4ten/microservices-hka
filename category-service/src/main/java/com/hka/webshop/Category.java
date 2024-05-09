@@ -4,6 +4,9 @@ import javax.persistence.*;
 
 
 // Datenmodell
+
+// Produkt anlegen (Kontrolle ob Kategorie existiert) UND 
+// Kategorie löschen (Kontrolle ob Produkt mit Kategorie existiert)
 @Entity
 public class Category implements java.io.Serializable {
 
