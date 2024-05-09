@@ -1,6 +1,6 @@
 package com.hka.webshop;
 
-import javax.persistence.Column;
+//import javax.persistence.Column;
 
 public class Product {
     private Long id;

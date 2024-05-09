@@ -4,8 +4,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import javax.servlet.http.HttpServletResponse;
+
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -14,6 +18,7 @@ import java.util.stream.StreamSupport;
 @RequestMapping(path = "/products")
 public class ProductController {
 
+    private final String categoryServiceEndpoint = !Objects.equals(System.getenv("CATEGORY_ENDPOINT"), "") ? System.getenv("CATEGORY_ENDPOINT") : "localhost";
     private final ProductRepository productRepository;
 
     @Autowired
@@ -57,6 +62,12 @@ public class ProductController {
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<?> addProduct(@RequestBody Product product, HttpServletResponse response) {
         response.setHeader("Pod", System.getenv("HOSTNAME"));
+
+        System.out.println("Category " + product.getCategoryId() + "exists: " + (product.getCategoryId() != 0 && getCategory(product.getCategoryId()) == null));
+
+        if (product.getCategoryId() != 0 && getCategory(product.getCategoryId()) == null)
+            return ResponseEntity.badRequest().body("Product can't be created due to non existent category");
+
         var createdProduct = productRepository.save(product);
         var location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(createdProduct.getId()).toUri();
         return ResponseEntity.created(location).body(createdProduct);
@@ -67,5 +78,21 @@ public class ProductController {
         response.setHeader("Pod", System.getenv("HOSTNAME"));
         if (!productRepository.existsById(id)) throw new RuntimeException();
         productRepository.deleteById(id);
+    }
+
+    private Category getCategory(int categoryId) {
+        WebClient client = createWebClient();
+        try {
+            return client.get().uri(String.valueOf(categoryId)).retrieve().bodyToMono(Category.class).block();
+        } catch (WebClientResponseException wcre) {
+            if (wcre.getStatusCode().equals(HttpStatus.NOT_FOUND))
+                return null;
+            throw wcre;
+        }
+    }
+
+    private WebClient createWebClient() {
+        System.out.println("URL called: " + "http://" + categoryServiceEndpoint + ":8080/categories/");
+        return WebClient.create("http://" + categoryServiceEndpoint + ":8080/categories/");
     }
 }
