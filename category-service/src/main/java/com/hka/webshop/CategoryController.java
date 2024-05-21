@@ -25,6 +25,12 @@ public class CategoryController {
         categoryRepository = repository;
     }
 
+    @GetMapping(path = "/info")
+    public String handleRequest() {
+        String hostName = System.getenv("HOSTNAME");
+        return "Response from pod: " + hostName;
+    }
+
     @GetMapping(path="/")
     public Iterable<Category> getAllCategories(HttpServletResponse response){
         response.setHeader("Pod", System.getenv("HOSTNAME"));

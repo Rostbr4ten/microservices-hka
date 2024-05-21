@@ -26,6 +26,12 @@ public class ProductController {
         productRepository = repository;
     }
 
+    @GetMapping(path = "/info")
+    public String handleRequest() {
+        String hostName = System.getenv("HOSTNAME");
+        return "Response from pod: " + hostName;
+    }
+
     @GetMapping(path = "/")
     public Iterable<Product> getAllProducts(@RequestParam(required = false) Boolean full,
                                             @RequestParam(required = false) Integer categoryId, //hier request ob product mit category exisitiert
