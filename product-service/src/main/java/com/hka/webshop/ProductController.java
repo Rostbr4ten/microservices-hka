@@ -7,8 +7,15 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
+
+import reactor.core.publisher.Mono;
+
 import javax.servlet.http.HttpServletResponse;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.net.URI;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -20,6 +27,7 @@ public class ProductController {
 
     private final String categoryServiceEndpoint = !Objects.equals(System.getenv("CATEGORY_ENDPOINT"), "") ? System.getenv("CATEGORY_ENDPOINT") : "localhost";
     private final ProductRepository productRepository;
+    private final Logger log = LoggerFactory.getLogger(ProductController.class);
 
     @Autowired
     public ProductController(ProductRepository repository) {
@@ -67,33 +75,59 @@ public class ProductController {
     @PostMapping(path = "/", consumes = {"application/json"}, produces = {"application/json"})
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<?> addProduct(@RequestBody Product product, HttpServletResponse response) {
+        log.info("Adding product: {}", product);
         response.setHeader("Pod", System.getenv("HOSTNAME"));
 
-        if (product.getCategoryId() != 0 && getCategory(product.getCategoryId()) == null)
-            return ResponseEntity.badRequest().body("Product can't be created due to non existent category");
+        // Überprüfung für ungültige Kategorie-IDs hinzufügen
+        if (product.getCategoryId() <= 0) {
+            return ResponseEntity.badRequest().body("Invalid category ID provided");
+        }
 
-        var createdProduct = productRepository.save(product);
-        var location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(createdProduct.getId()).toUri();
+        if (product.getCategoryId() != 0) {
+            Category category = getCategory(product.getCategoryId());
+            if (category == null) {
+                log.warn("Category not found for id: {}", product.getCategoryId());
+                return ResponseEntity.badRequest().body("Product can't be created due to non-existent category");
+            }
+        }
+
+        Product createdProduct = productRepository.save(product);
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(createdProduct.getId()).toUri();
         return ResponseEntity.created(location).body(createdProduct);
     }
 
     @DeleteMapping(path = "/{id}")
-    public void deleteProduct(@PathVariable Long id, HttpServletResponse response) {
+    public ResponseEntity<?> deleteProduct(@PathVariable Long id, HttpServletResponse response) {
         response.setHeader("Pod", System.getenv("HOSTNAME"));
-        if (!productRepository.existsById(id)) throw new RuntimeException();
-        productRepository.deleteById(id);
-    }
-
-    private Category getCategory(int categoryId) {
-        WebClient client = createWebClient();
-        try {
-            return client.get().uri(String.valueOf(categoryId)).retrieve().bodyToMono(Category.class).block();
-        } catch (WebClientResponseException wcre) {
-            if (wcre.getStatusCode().equals(HttpStatus.NOT_FOUND))
-                return null;
-            throw wcre;
+        if (!productRepository.existsById(id)) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product doesn't exist");  
         }
+        productRepository.deleteById(id);
+        return ResponseEntity.ok().build(); 
     }
+    
+
+private Category getCategory(int categoryId) {
+    WebClient client = createWebClient();
+    try {
+        return client.get()
+                     .uri(String.valueOf(categoryId))
+                     .retrieve()
+                     .onStatus(HttpStatus::is4xxClientError, response -> {
+                         if (response.statusCode().equals(HttpStatus.NOT_FOUND)) {
+                             return Mono.empty();  // Wenn 404, dann gebe null zurück
+                         }
+                         return response.createException().flatMap(Mono::error);
+                     })
+                     .onStatus(HttpStatus::is5xxServerError, response -> 
+                         response.createException().flatMap(Mono::error))
+                     .bodyToMono(Category.class)
+                     .block();
+    } catch (Exception e) {
+        log.error("Error fetching category with id: {}", categoryId, e);
+        throw new RuntimeException("Error fetching category", e);
+    }
+}
 
     private WebClient createWebClient() {
         return WebClient.create("http://" + categoryServiceEndpoint + ":8080/categories/");
