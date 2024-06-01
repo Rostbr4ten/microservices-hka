@@ -88,8 +88,14 @@ public class CategoryController {
             return true;
         }
     }
-    
+
+    // When using k8s
     private WebClient createWebClient() {
-        return WebClient.create("http://" + productServiceEndpoint + ":8080/products/");
+        return WebClient.create("http://product-service:8080/products/");
     }
+    
+    // When using Docker
+    //private WebClient createWebClient() {
+    //    return WebClient.create("http://" + productServiceEndpoint + ":8080/products/");
+    //}
 }

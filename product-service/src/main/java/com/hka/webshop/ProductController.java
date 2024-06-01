@@ -128,8 +128,13 @@ private Category getCategory(int categoryId) {
         throw new RuntimeException("Error fetching category", e);
     }
 }
-
+    //When using k8s
     private WebClient createWebClient() {
-        return WebClient.create("http://" + categoryServiceEndpoint + ":8080/categories/");
+        return WebClient.create("http://category-service:8080/categories/");
     }
+
+    // When using docker
+    //private WebClient createWebClient() {
+    //    return WebClient.create("http://" + categoryServiceEndpoint + ":8080/categories/");
+    //}
 }
