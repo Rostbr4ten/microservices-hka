@@ -63,12 +63,52 @@ public class CategoryController {
         if(!categoryRepository.existsById(id)) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Category doesn't exist");
         }
-        
-        if(productsExist(id)) return ResponseEntity.badRequest().body("Category is still used by some products");
-
+    
+        // Überprüfe, ob Produkte mit dieser Kategorie existieren
+        Product[] products = getProductsByCategoryId(id);
+        if (products != null && products.length > 0) {
+            // Lösche alle Produkte dieser Kategorie
+            deleteProducts(products);
+            //return ResponseEntity.ok("Deleted all products using this category");
+        }
+    
         categoryRepository.deleteById(id);
-        return ResponseEntity.ok("");
+        return ResponseEntity.ok("Category and products still using it deleted successfully");
     }
+    
+    private Product[] getProductsByCategoryId(Long categoryId) {
+        WebClient client = createWebClient();
+        try {
+            return client.get()
+                    .uri(uriBuilder -> uriBuilder
+                            .queryParam("categoryId", categoryId)
+                            .build())
+                    .retrieve()
+                    .bodyToMono(Product[].class)
+                    .block();
+        } catch (WebClientResponseException wcre) {
+            System.out.println("Failed to fetch products: " + wcre.getMessage());
+            return null;
+        } catch (Exception e) {
+            System.out.println("Unexpected error: " + e.getMessage());
+            return null;
+        }
+    }
+    
+    private void deleteProducts(Product[] products) {
+        WebClient client = createWebClient();
+        for (Product product : products) {
+            try {
+                client.delete()
+                      .uri(""+product.getId())
+                      .retrieve()
+                      .toBodilessEntity()
+                      .block();
+            } catch (Exception e) {
+                System.out.println("Failed to delete product: " + product.getId() + ", Error: " + e.getMessage());
+            }
+        }
+    }    
 
     private boolean productsExist(Long categoryId) {
         WebClient client = createWebClient();

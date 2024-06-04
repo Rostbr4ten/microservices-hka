@@ -25,7 +25,9 @@ import java.util.stream.StreamSupport;
 @RequestMapping(path = "/products")
 public class ProductController {
 
-    private final String categoryServiceEndpoint = !Objects.equals(System.getenv("CATEGORY_ENDPOINT"), "") ? System.getenv("CATEGORY_ENDPOINT") : "localhost";
+    private final String categoryServiceEndpoint = !Objects.equals(System.getenv("CATEGORY_ENDPOINT"), "")
+            ? System.getenv("CATEGORY_ENDPOINT")
+            : "localhost";
     private final ProductRepository productRepository;
     private final Logger log = LoggerFactory.getLogger(ProductController.class);
 
@@ -42,37 +44,41 @@ public class ProductController {
 
     @GetMapping(path = "/")
     public Iterable<Product> getAllProducts(@RequestParam(required = false) Boolean full,
-                                            @RequestParam(required = false) Integer categoryId, //hier request ob product mit category exisitiert
-                                            @RequestParam(required = false) String search,
-                                            @RequestParam(required = false, defaultValue = "0.0") Double minPrice,
-                                            @RequestParam(required = false) Double maxPrice, HttpServletResponse response) {
+            @RequestParam(required = false) Integer categoryId, // hier request ob product mit category exisitiert
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false, defaultValue = "0.0") Double minPrice,
+            @RequestParam(required = false) Double maxPrice, HttpServletResponse response) {
         response.setHeader("Pod", System.getenv("HOSTNAME"));
         if (categoryId != null)
             return productRepository.getProductsByCategoryId(categoryId);
 
         Iterable<Product> products;
         if (search != null) {
-            if (maxPrice == null) maxPrice = Double.MAX_VALUE;
-            if (minPrice == null) minPrice = 0.0;
+            if (maxPrice == null)
+                maxPrice = Double.MAX_VALUE;
+            if (minPrice == null)
+                minPrice = 0.0;
             products = productRepository.getProductsBySearchCriteria("%" + search + "%", minPrice, maxPrice);
-        }else {
+        } else {
             products = productRepository.findAll();
         }
-        if(full == null || !full) return products;
+        if (full == null || !full)
+            return products;
         return StreamSupport.stream(products.spliterator(), false).collect(Collectors.toList());
 
     }
 
     @GetMapping(path = "/{id}", produces = "application/json")
-    public Product getProduct(@PathVariable Long id, @RequestParam(required = false) Boolean full, HttpServletResponse response) {
+    public Product getProduct(@PathVariable Long id, @RequestParam(required = false) Boolean full,
+            HttpServletResponse response) {
         response.setHeader("Pod", System.getenv("HOSTNAME"));
         var product = productRepository.findById(id).orElseThrow(RuntimeException::new);
-        if (full == null || !full) return product;
+        if (full == null || !full)
+            return product;
         return product;
     }
 
-
-    @PostMapping(path = "/", consumes = {"application/json"}, produces = {"application/json"})
+    @PostMapping(path = "/", consumes = { "application/json" }, produces = { "application/json" })
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<?> addProduct(@RequestBody Product product, HttpServletResponse response) {
         log.info("Adding product: {}", product);
@@ -92,7 +98,8 @@ public class ProductController {
         }
 
         Product createdProduct = productRepository.save(product);
-        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(createdProduct.getId()).toUri();
+        URI location = ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}")
+                .buildAndExpand(createdProduct.getId()).toUri();
         return ResponseEntity.created(location).body(createdProduct);
     }
 
@@ -100,41 +107,41 @@ public class ProductController {
     public ResponseEntity<?> deleteProduct(@PathVariable Long id, HttpServletResponse response) {
         response.setHeader("Pod", System.getenv("HOSTNAME"));
         if (!productRepository.existsById(id)) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product doesn't exist");  
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Product doesn't exist");
         }
         productRepository.deleteById(id);
-        return ResponseEntity.ok().build(); 
+        return ResponseEntity.ok().build();
     }
-    
 
-private Category getCategory(int categoryId) {
-    WebClient client = createWebClient();
-    try {
-        return client.get()
-                     .uri(String.valueOf(categoryId))
-                     .retrieve()
-                     .onStatus(HttpStatus::is4xxClientError, response -> {
-                         if (response.statusCode().equals(HttpStatus.NOT_FOUND)) {
-                             return Mono.empty();  // Wenn 404, dann gebe null zurück
-                         }
-                         return response.createException().flatMap(Mono::error);
-                     })
-                     .onStatus(HttpStatus::is5xxServerError, response -> 
-                         response.createException().flatMap(Mono::error))
-                     .bodyToMono(Category.class)
-                     .block();
-    } catch (Exception e) {
-        log.error("Error fetching category with id: {}", categoryId, e);
-        throw new RuntimeException("Error fetching category", e);
+    private Category getCategory(int categoryId) {
+        WebClient client = createWebClient();
+        try {
+            return client.get()
+                    .uri(String.valueOf(categoryId))
+                    .retrieve()
+                    .onStatus(HttpStatus::is4xxClientError, response -> {
+                        if (response.statusCode().equals(HttpStatus.NOT_FOUND)) {
+                            return Mono.empty(); // Wenn 404, dann gebe null zurück
+                        }
+                        return response.createException().flatMap(Mono::error);
+                    })
+                    .onStatus(HttpStatus::is5xxServerError, response -> response.createException().flatMap(Mono::error))
+                    .bodyToMono(Category.class)
+                    .block();
+        } catch (Exception e) {
+            log.error("Error fetching category with id: {}", categoryId, e);
+            throw new RuntimeException("Error fetching category", e);
+        }
     }
-}
-    //When using k8s
+
+    // When using k8s
     private WebClient createWebClient() {
         return WebClient.create("http://category-service:8080/categories/");
     }
 
     // When using docker
-    //private WebClient createWebClient() {
-    //    return WebClient.create("http://" + categoryServiceEndpoint + ":8080/categories/");
-    //}
+    // private WebClient createWebClient() {
+    // return WebClient.create("http://" + categoryServiceEndpoint +
+    // ":8080/categories/");
+    // }
 }
