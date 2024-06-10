@@ -64,10 +64,10 @@ public class CategoryController {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Category doesn't exist");
         }
     
-        // Überprüfe, ob Produkte mit dieser Kategorie existieren
+        // Do products with this categoyr exist?
         Product[] products = getProductsByCategoryId(id);
         if (products != null && products.length > 0) {
-            // Lösche alle Produkte dieser Kategorie
+            // if yes, delete all
             deleteProducts(products);
             //return ResponseEntity.ok("Deleted all products using this category");
         }

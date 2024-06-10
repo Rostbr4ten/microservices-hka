@@ -84,7 +84,7 @@ public class ProductController {
         log.info("Adding product: {}", product);
         response.setHeader("Pod", System.getenv("HOSTNAME"));
 
-        // Überprüfung für ungültige Kategorie-IDs hinzufügen
+        // invalid category ids
         if (product.getCategoryId() <= 0) {
             return ResponseEntity.badRequest().body("Invalid category ID provided");
         }
